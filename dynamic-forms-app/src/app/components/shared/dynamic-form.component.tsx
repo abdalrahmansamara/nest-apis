@@ -1,10 +1,25 @@
 'use client'
-import React from "react";
-import { useForm } from "react-hook-form";
+import React, { useState, useEffect } from "react";
+import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { TextField, RadioGroup, Radio, FormControlLabel, Select, MenuItem, Button, Grid, Typography, FormControl, InputLabel, Checkbox } from "@mui/material";
-import { useState, useEffect } from "react";
 
-const formJson = {
+// Define types for the form fields
+interface FormField {
+  id: number;
+  name: string;
+  fieldType: string;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  defaultValue: string | boolean | string[];
+  required: boolean;
+  listOfValues1?: string[];
+}
+
+const formJson: {
+  data: FormField[]
+} = {
   data: [
     {
       id: 1,
@@ -71,18 +86,18 @@ const formJson = {
 
 export default function DynamicForm() {
   const { handleSubmit, register, formState: { errors } } = useForm();
-  const [formFields, setFormFields] = useState([]);
+  const [formFields, setFormFields] = useState<FormField[]>([]);
 
   useEffect(() => {
       setFormFields(formJson.data);
   }, []);
 
-  const onSubmit = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = (data) => {
     console.log("Form Data:", data);
     localStorage.setItem("formData", JSON.stringify(data));
   };
 
-  const renderField = (field) => {
+  const renderField = (field: FormField) => {
     switch (field.fieldType) {
       case "TEXT":
         return (
@@ -97,7 +112,7 @@ export default function DynamicForm() {
             fullWidth
             margin="normal"
             error={!!errors[field.name]}
-            helperText={errors[field.name]?.message}
+            helperText={errors[field.name]?.message?.toString() || ''}
           />
         );
 
@@ -109,7 +124,7 @@ export default function DynamicForm() {
               {...register(field.name, { required: field.required ? `${field.name} is required` : false })}
               defaultValue={field.defaultValue}
             >
-              {field.listOfValues1.map((value, index) => (
+              {field.listOfValues1?.map((value, index) => (
                 <MenuItem key={index} value={value}>
                   {value}
                 </MenuItem>
@@ -123,7 +138,7 @@ export default function DynamicForm() {
           <FormControl fullWidth margin="normal">
             <Typography>{field.name}</Typography>
             <RadioGroup defaultValue={field.defaultValue} {...register(field.name, { required: field.required })}>
-              {field.listOfValues1.map((value, index) => (
+              {field.listOfValues1?.map((value, index) => (
                 <FormControlLabel key={index} value={value} control={<Radio />} label={value} />
               ))}
             </RadioGroup>
@@ -134,7 +149,7 @@ export default function DynamicForm() {
         return (
           <FormControl fullWidth margin="normal">
             <Typography>{field.name}</Typography>
-            {field.listOfValues1.map((value, index) => (
+            {field.listOfValues1?.map((value, index) => (
               <FormControlLabel
                 key={index}
                 control={<Checkbox {...register(`${field.name}[${index}]`)} />}
@@ -158,7 +173,7 @@ export default function DynamicForm() {
             fullWidth
             margin="normal"
             error={!!errors[field.name]}
-            helperText={errors[field.name]?.message}
+            helperText={errors[field.name]?.message?.toString() || ''}
           />
         );
 
@@ -177,9 +192,10 @@ export default function DynamicForm() {
             fullWidth
             margin="normal"
             error={!!errors[field.name]}
-            helperText={errors[field.name]?.message}
+            helperText={errors[field.name]?.message?.toString() || ''}
           />
         );
+
       case "DATE":
         return (
           <TextField
@@ -204,91 +220,91 @@ export default function DynamicForm() {
             InputLabelProps={{ shrink: true }}
           />
         );
-case 'NUMBER':
+
+      case 'NUMBER':
         return (
-          <div key={id}>
-            <label>{name}</label>
+          <div key={field.id}>
+            <label>{field.name}</label>
             <input
               type="number"
-              min={min}
-              max={max}
-              value={formValues[name] || defaultValue}
-              onChange={(e) => handleChange(name, e.target.value)}
-              required={required}
+              min={field.min}
+              max={field.max}
+              defaultValue={field.defaultValue as string}
+              required={field.required}
             />
           </div>
         );
+
       case 'SLIDER':
         return (
-          <div key={id}>
-            <label>{name}</label>
+          <div key={field.id}>
+            <label>{field.name}</label>
             <input
               type="range"
-              min={min}
-              max={max}
-              value={formValues[name] || defaultValue}
-              onChange={(e) => handleChange(name, e.target.value)}
-              required={required}
+              min={field.min}
+              max={field.max}
+              defaultValue={field.defaultValue as string}
+              required={field.required}
             />
           </div>
         );
+
       case 'SWITCH':
         return (
-          <div key={id}>
-            <label>{name}</label>
+          <div key={field.id}>
+            <label>{field.name}</label>
             <input
               type="checkbox"
-              checked={formValues[name] || defaultValue}
-              onChange={(e) => handleChange(name, e.target.checked)}
-              required={required}
+              defaultChecked={field.defaultValue as boolean}
+              required={field.required}
             />
           </div>
         );
+
       case 'COLOR':
         return (
-          <div key={id}>
-            <label>{name}</label>
+          <div key={field.id}>
+            <label>{field.name}</label>
             <input
               type="color"
-              value={formValues[name] || defaultValue}
-              onChange={(e) => handleChange(name, e.target.value)}
-              required={required}
+              defaultValue={field.defaultValue as string}
+              required={field.required}
             />
           </div>
         );
+
       case 'TIME':
         return (
-          <div key={id}>
-            <label>{name}</label>
+          <div key={field.id}>
+            <label>{field.name}</label>
             <input
               type="time"
-              value={formValues[name] || defaultValue}
-              onChange={(e) => handleChange(name, e.target.value)}
-              required={required}
+              defaultValue={field.defaultValue as string}
+              required={field.required}
             />
           </div>
         );
+
       case 'URL':
         return (
-          <div key={id}>
-            <label>{name}</label>
+          <div key={field.id}>
+            <label>{field.name}</label>
             <input
               type="url"
-              value={formValues[name] || defaultValue}
-              onChange={(e) => handleChange(name, e.target.value)}
-              required={required}
+              defaultValue={field.defaultValue as string}
+              required={field.required}
             />
           </div>
         );
+
       case 'PHONE':
         return (
-          <div key={id}>
-            <label>{name}</label>
+          <div key={field.id}>
+            <label>{field.name}</label>
             <input
               type="tel"
-              value={formValues[name] || defaultValue}
-              onChange={(e) => handleChange(name, e.target.value)}
-              required={required}
+              defaultValue={field.defaultValue as string}
+              required={field.required}
             />
           </div>
         );
